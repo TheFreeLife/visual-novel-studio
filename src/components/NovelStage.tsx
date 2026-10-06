@@ -427,38 +427,53 @@ export const NovelStage: React.FC<NovelStageProps> = ({
             }
 
             const avatarSrc = getCharacterAvatarUrl(char);
+            const customScale = typeof char.scale === 'number' ? char.scale : 1.0;
+            const customOffsetY = typeof char.offsetY === 'number' ? char.offsetY : 0;
 
             return (
               <div
                 key={char.id}
                 className={`absolute bottom-0 h-[52%] sm:h-[60%] md:h-[66%] max-w-[36%] sm:max-w-[28%] md:max-w-[24%] flex flex-col items-center justify-end origin-bottom pointer-events-none select-none ${positionClass} ${speakerFocusClass}`}
               >
-                {/* Commercial VN Style Standing Character Graphic */}
-                <div className={`relative h-full w-full flex flex-col items-center justify-end ${effectClass}`}>
-                  {/* 머리 위 예쁜 애니메이션 느낌표 (!) - 배경 없는 세련된 팝 벡터 */}
-                  {item.effect === 'exclamation' && (
-                    <div className="absolute top-[8%] sm:top-[10%] md:top-[12%] left-1/2 -translate-x-1/2 z-30 pointer-events-none animate-pop-bubble select-none flex items-center justify-center">
-                      <PopExclamationIcon />
-                    </div>
-                  )}
+                {/* 1. Base Scale & Vertical Offset Isolated Layer (보호 계층: 애니메이션 키프레임 간섭 방지) */}
+                <div 
+                  className="relative h-full w-full flex flex-col items-center justify-end"
+                  style={{
+                    transform: `scale(${customScale}) translateY(${customOffsetY}%)`,
+                    transformOrigin: 'bottom center',
+                    transition: 'transform 0.2s ease-out'
+                  }}
+                >
+                  {/* 2. Action Effect Animation Layer (커스텀 스케일 내부에서 상대적으로 실행) */}
+                  <div 
+                    key={`${char.id}_${currentLineIndex}_${item.effect || 'none'}`}
+                    className={`relative h-full w-full flex flex-col items-center justify-end ${effectClass}`}
+                  >
+                    {/* 머리 위 예쁜 애니메이션 느낌표 (!) - 배경 없는 세련된 팝 벡터 */}
+                    {item.effect === 'exclamation' && (
+                      <div className="absolute top-[8%] sm:top-[10%] md:top-[12%] left-1/2 -translate-x-1/2 z-30 pointer-events-none animate-pop-bubble select-none flex items-center justify-center">
+                        <PopExclamationIcon />
+                      </div>
+                    )}
 
-                  {/* 머리 위 물음표 (?) 이펙트 - 배경 없는 깔끔한 심볼 */}
-                  {item.effect === 'question' && (
-                    <div className="absolute top-[8%] sm:top-[10%] md:top-[12%] left-1/2 -translate-x-1/2 z-30 pointer-events-none animate-pop-bubble select-none flex items-center justify-center">
-                      <span className="text-3xl sm:text-4xl select-none leading-none filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.85)]">
-                        ❓
-                      </span>
-                    </div>
-                  )}
+                    {/* 머리 위 물음표 (?) 이펙트 - 배경 없는 깔끔한 심볼 */}
+                    {item.effect === 'question' && (
+                      <div className="absolute top-[8%] sm:top-[10%] md:top-[12%] left-1/2 -translate-x-1/2 z-30 pointer-events-none animate-pop-bubble select-none flex items-center justify-center">
+                        <span className="text-3xl sm:text-4xl select-none leading-none filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.85)]">
+                          ❓
+                        </span>
+                      </div>
+                    )}
 
-                  <img 
-                    src={avatarSrc} 
-                    alt={char.name} 
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = (char.gender === 'female' ? DEFAULT_AVATAR_IMAGES.female : DEFAULT_AVATAR_IMAGES.male);
-                    }}
-                    className="h-full w-auto max-w-full object-contain object-bottom pointer-events-none select-none filter transition-transform duration-300 drop-shadow-[0_20px_35px_rgba(0,0,0,0.85)]"
-                  />
+                    <img 
+                      src={avatarSrc} 
+                      alt={char.name} 
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = (char.gender === 'female' ? DEFAULT_AVATAR_IMAGES.female : DEFAULT_AVATAR_IMAGES.male);
+                      }}
+                      className="h-full w-auto max-w-full object-contain object-bottom pointer-events-none select-none filter transition-transform duration-300 drop-shadow-[0_20px_35px_rgba(0,0,0,0.85)]"
+                    />
+                  </div>
                 </div>
               </div>
             );

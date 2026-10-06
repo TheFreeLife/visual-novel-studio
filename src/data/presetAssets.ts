@@ -135,6 +135,8 @@ export const PRESET_CHARACTERS: Character[] = [
     gender: 'male',
     defaultPosition: 'left',
     avatarUrl: '',
+    scale: 1.0,
+    offsetY: 0,
   },
   {
     id: 'char_suah',
@@ -144,6 +146,8 @@ export const PRESET_CHARACTERS: Character[] = [
     gender: 'female',
     defaultPosition: 'right',
     avatarUrl: '',
+    scale: 1.15,
+    offsetY: 4,
   },
   {
     id: 'char_siwoo',
@@ -153,6 +157,8 @@ export const PRESET_CHARACTERS: Character[] = [
     gender: 'male',
     defaultPosition: 'right',
     avatarUrl: '',
+    scale: 1.0,
+    offsetY: 0,
   },
   {
     id: 'char_haeun',
@@ -162,6 +168,8 @@ export const PRESET_CHARACTERS: Character[] = [
     gender: 'female',
     defaultPosition: 'right',
     avatarUrl: '',
+    scale: 1.15,
+    offsetY: 4,
   }
 ];
 

@@ -41,7 +41,9 @@ import {
   Activity, 
   Clapperboard,
   Eye,
-  EyeOff
+  EyeOff,
+  Sliders,
+  RotateCcw
 } from 'lucide-react';
 
 interface EditorPanelProps {
@@ -199,6 +201,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
       gender: 'female',
       defaultPosition: 'right',
       avatarUrl: '',
+      scale: 1.0,
+      offsetY: 0,
     };
 
     onUpdateCharacters([...project.characters, newChar]);
@@ -1069,6 +1073,97 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                       기본 위치: <span className="text-slate-300 font-medium">{char.defaultPosition === 'left' ? '왼쪽 (주인공)' : '오른쪽'}</span>
                     </div>
                   </div>
+                </div>
+
+                {/* Standing CG Proportion & Alignment Adjuster (스탠딩 CG 크기 및 눈높이 보정) */}
+                <div className="pt-2 border-t border-slate-800/80 space-y-2">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <div className="flex items-center gap-1.5 text-slate-300 font-semibold">
+                      <Sliders className="w-3.5 h-3.5 text-blue-400" />
+                      <span>스탠딩 CG 비율 &amp; 눈높이 보정</span>
+                    </div>
+                    {((char.scale !== undefined && char.scale !== 1.0) || (char.offsetY !== undefined && char.offsetY !== 0)) && (
+                      <button
+                        onClick={() => {
+                          const updated = project.characters.map((c) =>
+                            c.id === char.id ? { ...c, scale: 1.0, offsetY: 0 } : c
+                          );
+                          onUpdateCharacters(updated);
+                        }}
+                        className="flex items-center gap-1 text-[10px] text-amber-400 hover:text-amber-300 hover:underline"
+                        title="기본값(크기 100%, 위치 0%)으로 초기화"
+                      >
+                        <RotateCcw className="w-2.5 h-2.5" />
+                        <span>초기화</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 bg-slate-900/60 p-2 rounded-lg border border-slate-800">
+                    {/* Scale Slider */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-slate-400">크기 (Scale)</span>
+                        <span className="font-mono text-blue-400 font-bold">
+                          {Math.round((char.scale ?? 1.0) * 100)}%
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="60"
+                        max="160"
+                        step="2"
+                        value={Math.round((char.scale ?? 1.0) * 100)}
+                        onChange={(e) => {
+                          const newScale = parseFloat((Number(e.target.value) / 100).toFixed(2));
+                          const updated = project.characters.map((c) =>
+                            c.id === char.id ? { ...c, scale: newScale } : c
+                          );
+                          onUpdateCharacters(updated);
+                        }}
+                        className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                      />
+                      <div className="flex justify-between text-[9px] text-slate-500">
+                        <span>60%</span>
+                        <span>100%</span>
+                        <span>160%</span>
+                      </div>
+                    </div>
+
+                    {/* Y-Offset Slider */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-slate-400">세로 위치 (Y-Offset)</span>
+                        <span className="font-mono text-emerald-400 font-bold">
+                          {(char.offsetY ?? 0) > 0 ? `+${char.offsetY}%` : `${char.offsetY ?? 0}%`}
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="-30"
+                        max="30"
+                        step="1"
+                        value={char.offsetY ?? 0}
+                        onChange={(e) => {
+                          const newOffset = Number(e.target.value);
+                          const updated = project.characters.map((c) =>
+                            c.id === char.id ? { ...c, offsetY: newOffset } : c
+                          );
+                          onUpdateCharacters(updated);
+                        }}
+                        className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                      />
+                      <div className="flex justify-between text-[9px] text-slate-500">
+                        <span>-30%(위)</span>
+                        <span>0</span>
+                        <span>+30%(아래)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-slate-400 leading-tight">
+                    💡 <span className="text-slate-300">팁:</span> 몸통이 작거나 얼굴 높이가 안 맞을 땐, 크기를 키운 후 아래(+)로 내려 대사창 뒤로 묻히게 하면 자연스러워집니다.
+                  </p>
                 </div>
               </div>
             ))}

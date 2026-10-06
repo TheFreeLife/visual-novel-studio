@@ -17,6 +17,8 @@ export interface Character {
   gender?: 'male' | 'female';
   avatarUrl: string;
   expressions?: Partial<Record<CharacterExpression, string>>;
+  scale?: number; // Character scale multiplier (0.6 ~ 1.6, default: 1.0)
+  offsetY?: number; // Character vertical offset in % (-30 ~ 30, default: 0)
 }
 
 export type SceneCharacterPosition = 'auto' | 'left' | 'center' | 'right' | 'hidden';
