@@ -1,0 +1,6 @@
+{
+  "name": "NovelStudio - 비주얼 노벨 연출 스튜디오",
+  "description": "대본과 시나리오를 직접 입력하여 실시간 비주얼 노벨로 연출하고 감상하는 원페이지 웹 스튜디오 & 시뮬레이터",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
