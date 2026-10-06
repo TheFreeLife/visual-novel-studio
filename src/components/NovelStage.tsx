@@ -520,7 +520,9 @@ export const NovelStage: React.FC<NovelStageProps> = ({
                   style={{ color: style.textColor || '#ffffff' }}
                   className={`whitespace-pre-wrap leading-relaxed overflow-y-auto pr-6 ${fontSizeClass}`}
                 >
-                  {displayedText}
+                  {displayedText || (
+                    <span className="text-slate-500 italic opacity-60 select-none">대사를 입력하세요...</span>
+                  )}
                   {isTyping && (
                     <span className="inline-block w-1.5 h-4 ml-1 bg-amber-400 animate-pulse align-middle" />
                   )}

@@ -125,7 +125,7 @@ export const BacklogModal: React.FC<BacklogModalProps> = ({
                 </div>
 
                 <p className="text-xs sm:text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">
-                  {item.text}
+                  {item.text || <span className="text-slate-500 italic">(대사 없음)</span>}
                 </p>
               </div>
             );

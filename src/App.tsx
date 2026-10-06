@@ -108,7 +108,7 @@ export default function App() {
         {
           id: `line_${Date.now()}`,
           speakerId: protagonist ? protagonist.id : null,
-          text: '새로운 장면의 첫 번째 대사를 입력하세요.',
+          text: '',
           speakerExpression: 'neutral'
         }
       ],

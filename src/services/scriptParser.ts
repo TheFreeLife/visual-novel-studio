@@ -104,22 +104,33 @@ export function resolveScenePositions(
       } else {
         // 새로운 화자가 처음으로 대사를 하여 무대에 등장!
         if (!leftSlot && !rightSlot) {
-          // 화면에 아무도 없을 때 첫 등장
-          if (speakerChar.defaultPosition === 'right' && !speakerChar.isProtagonist) {
-            rightSlot = { characterId: speakerId, lastSpokenIndex: i };
-          } else {
-            leftSlot = { characterId: speakerId, lastSpokenIndex: i };
-          }
+          // [사용자 규칙] 무대에 아무런 인물이 없는 상태에서 첫 발언자는 무조건 왼쪽으로 배치
+          leftSlot = { characterId: speakerId, lastSpokenIndex: i };
         } else if (!leftSlot) {
           leftSlot = { characterId: speakerId, lastSpokenIndex: i };
         } else if (!rightSlot) {
-          rightSlot = { characterId: speakerId, lastSpokenIndex: i };
-        } else {
-          // 둘 다 이미 차 있는 경우: 가장 오래전에 발화한 슬롯을 교체
-          if (leftSlot.lastSpokenIndex <= rightSlot.lastSpokenIndex) {
+          if (speakerChar.isProtagonist) {
+            // 주인공이 뒤늦게 등장할 때, 주인공은 항상 좌측에 위치해야 하므로 기존 좌측 인물을 우측으로 밀고 주인공이 좌측 차지
+            rightSlot = leftSlot;
             leftSlot = { characterId: speakerId, lastSpokenIndex: i };
           } else {
             rightSlot = { characterId: speakerId, lastSpokenIndex: i };
+          }
+        } else {
+          // 둘 다 이미 차 있는 경우:
+          // [사용자 규칙] 주인공이 뒤늦게 끼어드는 주체면 오래된 발언자와 상관없이 무조건 좌측 인물과 교체
+          if (speakerChar.isProtagonist) {
+            leftSlot = { characterId: speakerId, lastSpokenIndex: i };
+          } else {
+            const leftChar = charMap.get(leftSlot.characterId);
+            // 좌측에 주인공이 이미 있는 경우, 일반 제3자는 주인공을 밀어내지 않고 우측 인물과 교체
+            if (leftChar?.isProtagonist) {
+              rightSlot = { characterId: speakerId, lastSpokenIndex: i };
+            } else if (leftSlot.lastSpokenIndex <= rightSlot.lastSpokenIndex) {
+              leftSlot = { characterId: speakerId, lastSpokenIndex: i };
+            } else {
+              rightSlot = { characterId: speakerId, lastSpokenIndex: i };
+            }
           }
         }
       }
@@ -334,7 +345,7 @@ export function parseScriptTextToScenes(
       title: '새 장면 1',
       background: { type: 'preset', value: initialBgId, filter: 'none' },
       castCharacterIds: [],
-      lines: [{ id: 'line_1', speakerId: null, text: '대사를 입력하세요.' }],
+      lines: [{ id: 'line_1', speakerId: null, text: '' }],
       transition: 'none'
     });
   }

@@ -112,7 +112,7 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
     const newLine: DialogLine = {
       id: `line_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       speakerId: defaultSpeaker,
-      text: '새로운 대사를 입력하세요.',
+      text: '',
       speakerExpression: 'neutral'
     };
 
