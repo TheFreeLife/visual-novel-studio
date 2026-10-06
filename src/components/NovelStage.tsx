@@ -433,7 +433,7 @@ export const NovelStage: React.FC<NovelStageProps> = ({
             return (
               <div
                 key={char.id}
-                className={`absolute bottom-0 h-[52%] sm:h-[60%] md:h-[66%] max-w-[36%] sm:max-w-[28%] md:max-w-[24%] flex flex-col items-center justify-end origin-bottom pointer-events-none select-none ${positionClass} ${speakerFocusClass}`}
+                className={`absolute bottom-0 h-[52%] sm:h-[60%] md:h-[66%] max-w-[42%] sm:max-w-[34%] md:max-w-[30%] flex flex-col items-center justify-end origin-bottom pointer-events-none select-none ${positionClass} ${speakerFocusClass}`}
               >
                 {/* 1. Base Scale & Vertical Offset Isolated Layer (보호 계층: 애니메이션 키프레임 간섭 방지) */}
                 <div 
@@ -449,30 +449,33 @@ export const NovelStage: React.FC<NovelStageProps> = ({
                     key={`${char.id}_${currentLineIndex}_${item.effect || 'none'}`}
                     className={`relative h-full w-full flex flex-col items-center justify-end ${effectClass}`}
                   >
-                    {/* 머리 위 예쁜 애니메이션 느낌표 (!) - 배경 없는 세련된 팝 벡터 */}
-                    {item.effect === 'exclamation' && (
-                      <div className="absolute top-[8%] sm:top-[10%] md:top-[12%] left-1/2 -translate-x-1/2 z-30 pointer-events-none animate-pop-bubble select-none flex items-center justify-center">
-                        <PopExclamationIcon />
-                      </div>
-                    )}
+                    {/* 캐릭터 이미지 앵커 컨테이너 (정수리 바로 위에 이펙트를 안착시키는 기준점) */}
+                    <div className="relative h-full max-w-full flex flex-col items-center justify-end">
+                      {/* 머리 위 예쁜 애니메이션 느낌표 (!) - 캐릭터 정수리 바로 위에 완벽 밀착 */}
+                      {item.effect === 'exclamation' && (
+                        <div className="absolute bottom-[calc(100%+0.5rem)] sm:bottom-[calc(100%+0.75rem)] left-1/2 -translate-x-1/2 z-30 pointer-events-none animate-pop-bubble select-none flex items-center justify-center">
+                          <PopExclamationIcon />
+                        </div>
+                      )}
 
-                    {/* 머리 위 물음표 (?) 이펙트 - 배경 없는 깔끔한 심볼 */}
-                    {item.effect === 'question' && (
-                      <div className="absolute top-[8%] sm:top-[10%] md:top-[12%] left-1/2 -translate-x-1/2 z-30 pointer-events-none animate-pop-bubble select-none flex items-center justify-center">
-                        <span className="text-3xl sm:text-4xl select-none leading-none filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.85)]">
-                          ❓
-                        </span>
-                      </div>
-                    )}
+                      {/* 머리 위 물음표 (?) 이펙트 - 캐릭터 정수리 바로 위에 완벽 밀착 */}
+                      {item.effect === 'question' && (
+                        <div className="absolute bottom-[calc(100%+0.5rem)] sm:bottom-[calc(100%+0.75rem)] left-1/2 -translate-x-1/2 z-30 pointer-events-none animate-pop-bubble select-none flex items-center justify-center">
+                          <span className="text-3xl sm:text-4xl md:text-5xl select-none leading-none filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.85)]">
+                            ❓
+                          </span>
+                        </div>
+                      )}
 
-                    <img 
-                      src={avatarSrc} 
-                      alt={char.name} 
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src = (char.gender === 'female' ? DEFAULT_AVATAR_IMAGES.female : DEFAULT_AVATAR_IMAGES.male);
-                      }}
-                      className="h-full w-auto max-w-full object-contain object-bottom pointer-events-none select-none filter transition-transform duration-300 drop-shadow-[0_20px_35px_rgba(0,0,0,0.85)]"
-                    />
+                      <img 
+                        src={avatarSrc} 
+                        alt={char.name} 
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = (char.gender === 'female' ? DEFAULT_AVATAR_IMAGES.female : DEFAULT_AVATAR_IMAGES.male);
+                        }}
+                        className="h-full w-auto max-w-full object-contain object-bottom pointer-events-none select-none filter transition-transform duration-300 drop-shadow-[0_20px_35px_rgba(0,0,0,0.85)]"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
