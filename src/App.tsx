@@ -11,6 +11,7 @@ import { BacklogModal } from './components/BacklogModal';
 import { ScriptImportModal } from './components/ScriptImportModal';
 import { SettingsModal } from './components/SettingsModal';
 import { PdfExportModal } from './components/PdfExportModal';
+import { TxtExportModal } from './components/TxtExportModal';
 import { Eye, Edit3, Sparkles } from 'lucide-react';
 
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
   const [isScriptImportOpen, setIsScriptImportOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
+  const [isTxtExportOpen, setIsTxtExportOpen] = useState(false);
 
   // Mobile layout switch
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('preview');
@@ -236,6 +238,7 @@ export default function App() {
         onOpenSlideNavigator={() => setIsSlideNavOpen(true)}
         onOpenBacklog={() => setIsBacklogOpen(true)}
         onOpenScriptImport={() => setIsScriptImportOpen(true)}
+        onOpenTxtExport={() => setIsTxtExportOpen(true)}
         onOpenPdfExport={() => setIsPdfExportOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onExportJson={handleExportJson}
@@ -363,6 +366,13 @@ export default function App() {
       <PdfExportModal
         isOpen={isPdfExportOpen}
         onClose={() => setIsPdfExportOpen(false)}
+        project={project}
+      />
+
+      {/* Novel Script TXT Export Modal */}
+      <TxtExportModal
+        isOpen={isTxtExportOpen}
+        onClose={() => setIsTxtExportOpen(false)}
         project={project}
       />
     </div>

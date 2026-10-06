@@ -272,11 +272,12 @@ export function parseScriptTextToScenes(
     const line = rawLine.trim();
     if (!line) return;
 
-    // Check [장면: ...] or [SCENE: ...] or [배경: ...]
+    // Check [장면: ...] or [SCENE: ...] or [배경: ...] or *** (씬 구분선)
     const sceneMatch = line.match(/^\[(?:장면|SCENE)\s*:\s*(.+?)\]/i);
     const bgMatch = line.match(/^\[(?:배경|BG)\s*:\s*(.+?)\]/i);
+    const dividerMatch = line === '***' || line === '* * *' || line === '---';
 
-    if (sceneMatch || bgMatch) {
+    if (sceneMatch || bgMatch || dividerMatch) {
       if (bgMatch) {
         const query = bgMatch[1].trim();
         const matched = PRESET_BACKGROUNDS.find((b) => b.name.includes(query) || b.id.includes(query));
@@ -298,7 +299,14 @@ export function parseScriptTextToScenes(
       const speakerRaw = dialogMatch[1].trim();
       let dialogContent = dialogMatch[2].trim();
 
-      if (speakerRaw === '나레이션' || speakerRaw === '해설' || speakerRaw === '지문' || speakerRaw === 'Narration') {
+      if (
+        speakerRaw === '나레이션' || 
+        speakerRaw === '해설' || 
+        speakerRaw === '지문' || 
+        speakerRaw === 'Narration' ||
+        speakerRaw === '[상황]' ||
+        speakerRaw === '상황'
+      ) {
         currentScene!.lines.push({
           id: `line_${Date.now()}_${idx}`,
           speakerId: null,
@@ -307,11 +315,34 @@ export function parseScriptTextToScenes(
         return;
       }
 
-      let expression: CharacterExpression = 'neutral';
-      const expMatch = dialogContent.match(/^\(([^)]+)\)\s*(.*)$/);
-      if (expMatch) {
-        expression = parseExpressionKeyword(expMatch[1]);
-        dialogContent = expMatch[2];
+      // 작은따옴표 '...' 생각 표현이면 (생각내용)으로 대사 텍스트 보존
+      const singleQuoteMatch = dialogContent.match(/^['‘](.+?)['’]$/s);
+      let isThought = false;
+      if (singleQuoteMatch) {
+        dialogContent = `(${singleQuoteMatch[1].trim()})`;
+        isThought = true;
+      } else {
+        // 큰따옴표 "..." 일반 대사면 따옴표 벗겨서 보존
+        const doubleQuoteMatch = dialogContent.match(/^["“](.+?)["”]$/s);
+        if (doubleQuoteMatch) {
+          dialogContent = doubleQuoteMatch[1].trim();
+        }
+      }
+
+      let expression: CharacterExpression = isThought ? 'thinking' : 'neutral';
+
+      // 생각 표현이 아닌 경우에만 "(미소) 안녕!" 형태의 표정 분리 검사
+      if (!isThought) {
+        const expMatch = dialogContent.match(/^\(([^)]+)\)\s*(.+)$/s);
+        if (expMatch) {
+          const keyword = expMatch[1].trim();
+          const restText = expMatch[2].trim();
+          const parsedExp = parseExpressionKeyword(keyword);
+          if (parsedExp !== 'neutral' || restText) {
+            expression = parsedExp;
+            dialogContent = restText;
+          }
+        }
       }
 
       const speakerChar = getOrCreateChar(speakerRaw);
@@ -375,4 +406,191 @@ export function convertScenesToScriptText(scenes: Scene[], characters: Character
   });
 
   return output.join('\n');
+}
+
+export interface DialogSegment {
+  type: 'thought' | 'dialogue';
+  text: string;
+}
+
+/**
+ * 대사 문자열을 분석하여 생각과 발화 조각들로 분리 (혼합 대사 지원)
+ * - 괄호 (...) 내부: 생각 ('...')
+ * - 괄호 외부: 일반 발화 ("...")
+ */
+export function splitDialogSegments(rawText: string): DialogSegment[] {
+  let text = rawText.trim();
+  if (!text) return [];
+
+  // 전체가 큰따옴표로만 감싸져 있고 내부에 다른 큰따옴표가 없다면 바깥 따옴표 정리
+  if (text.startsWith('"') && text.endsWith('"') && !text.slice(1, -1).includes('"')) {
+    text = text.slice(1, -1).trim();
+  } else if (text.startsWith('“') && text.endsWith('”') && !text.slice(1, -1).includes('“')) {
+    text = text.slice(1, -1).trim();
+  }
+
+  // 1. 전체가 순수 생각인 경우: (생각) or '생각'
+  const fullParen = text.match(/^[(（]\s*(.+?)\s*[)）][.]?$/s);
+  if (fullParen) {
+    return [{ type: 'thought', text: fullParen[1].trim() }];
+  }
+  const fullSingle = text.match(/^['‘]\s*(.+?)\s*['’][.]?$/s);
+  if (fullSingle) {
+    return [{ type: 'thought', text: fullSingle[1].trim() }];
+  }
+
+  // 2. 괄호가 전혀 없는 순수 일반 대사인 경우
+  if (!text.includes('(') && !text.includes('（')) {
+    const clean = text.replace(/^["“](.*)["”]$/s, '$1').trim();
+    return [{ type: 'dialogue', text: clean }];
+  }
+
+  // 3. 생각과 일반 대사가 섞여 있는 경우: 순서대로 분리
+  const regex = /[(（](.+?)[)）]/g;
+  const segments: DialogSegment[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(text)) !== null) {
+    // 괄호 앞의 일반 대사
+    const beforeText = text.slice(lastIndex, match.index).trim();
+    if (beforeText) {
+      const cleanBefore = beforeText.replace(/^["“](.*)["”]$/s, '$1').trim();
+      if (cleanBefore) {
+        segments.push({ type: 'dialogue', text: cleanBefore });
+      }
+    }
+
+    // 괄호 안의 생각
+    const thoughtText = match[1].trim();
+    if (thoughtText) {
+      segments.push({ type: 'thought', text: thoughtText });
+    }
+
+    lastIndex = regex.lastIndex;
+  }
+
+  // 마지막 괄호 뒤의 일반 대사
+  const afterText = text.slice(lastIndex).trim();
+  if (afterText) {
+    const cleanAfter = afterText.replace(/^["“](.*)["”]$/s, '$1').trim();
+    if (cleanAfter) {
+      segments.push({ type: 'dialogue', text: cleanAfter });
+    }
+  }
+
+  return segments.length > 0 ? segments : [{ type: 'dialogue', text }];
+}
+
+/**
+ * 인물 대사를 서식화된 문장 배열로 변환 (방식 B: 생각과 대사를 각각 별도의 문장으로 자동 분할)
+ */
+export function formatDialogLinesForTxtExport(speakerName: string, rawText: string): string[] {
+  const segments = splitDialogSegments(rawText);
+  if (segments.length === 0) return [`${speakerName}: ""`];
+
+  return segments.map((seg) => {
+    if (seg.type === 'thought') {
+      return `${speakerName}: '${seg.text}'`;
+    }
+    return `${speakerName}: "${seg.text}"`;
+  });
+}
+
+/**
+ * 단일 대사 서식화 헬퍼 (기존 호환성 유지)
+ */
+export function formatDialogForTxtExport(rawText: string): { type: 'thought' | 'dialogue'; formatted: string } {
+  const segments = splitDialogSegments(rawText);
+  if (segments.length === 0) return { type: 'dialogue', formatted: '""' };
+  const first = segments[0];
+  if (first.type === 'thought') {
+    return { type: 'thought', formatted: `'${first.text}'` };
+  }
+  return { type: 'dialogue', formatted: `"${first.text}"` };
+}
+
+/**
+ * 나레이션/지문 텍스트를 [상황]: 포맷으로 변환
+ */
+export function formatNarrationForTxtExport(rawText: string): string {
+  let text = rawText.trim();
+  text = text
+    .replace(/^\[(?:상황|나레이션|지문|해설)\]\s*[:：]?\s*/i, '')
+    .replace(/^(?:상황|나레이션|지문|해설)\s*[:：]\s*/i, '')
+    .trim();
+  return `[상황]: ${text}`;
+}
+
+export interface NovelScriptTxtOptions {
+  includeSceneHeaders?: boolean;
+}
+
+/**
+ * 프로젝트의 모든 장면과 대사를 소설/대본 TXT 파일 양식으로 변환
+ * 템플릿:
+ * 정우진: "물러서! 전원 사각으로 후퇴해! 시계탑 기둥 뒤로 숨어!"
+ * [상황]: 살아남은 대원들이 부서진 석재 기둥과 차폐벽 뒤로 몸을 던짐...
+ * 박현우: '단순한 파괴 광선이 아니야. 닿은 대상의 시간을 강제로 역류시키고 있어.'
+ */
+export function exportProjectToNovelScriptTxt(
+  scenes: Scene[],
+  characters: Character[],
+  options: NovelScriptTxtOptions = {}
+): string {
+  const charMap = new Map(characters.map((c) => [c.id, c.name]));
+  const sceneSections: string[] = [];
+
+  scenes.forEach((scene, sIdx) => {
+    const sceneParagraphs: string[] = [];
+
+    if (options.includeSceneHeaders && scenes.length > 1) {
+      const headerTitle = scene.title || `장면 ${sIdx + 1}`;
+      sceneParagraphs.push(`[장면 ${sIdx + 1}: ${headerTitle}]`);
+    }
+
+    scene.lines.forEach((line) => {
+      const rawText = (line.text || '').trim();
+      if (!rawText) return;
+
+      if (!line.speakerId) {
+        // 화자가 없는 나레이션
+        sceneParagraphs.push(formatNarrationForTxtExport(rawText));
+      } else {
+        // 등장인물 대사 / 생각 (방식 B: 생각과 대사가 섞여 있으면 각각 별도의 문장으로 자동 분할)
+        const speakerName = charMap.get(line.speakerId) || line.speakerCustomName || '등장인물';
+        const formattedLines = formatDialogLinesForTxtExport(speakerName, rawText);
+        sceneParagraphs.push(...formattedLines);
+      }
+    });
+
+    if (sceneParagraphs.length > 0) {
+      sceneSections.push(sceneParagraphs.join('\n\n'));
+    }
+  });
+
+  // 씬 전환 구분자: *** 앞뒤로 세 줄 띄기 (\n\n\n\n***\n\n\n\n)
+  return sceneSections.join('\n\n\n\n***\n\n\n\n');
+}
+
+/**
+ * 프로젝트 대본을 .txt 파일로 다운로드 실행
+ */
+export function downloadNovelScriptTxt(
+  projectTitle: string,
+  scenes: Scene[],
+  characters: Character[],
+  options: NovelScriptTxtOptions = {}
+): void {
+  const content = exportProjectToNovelScriptTxt(scenes, characters, options);
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const fileName = (projectTitle || '대본').trim().replace(/[/\\?%*:|"<>]/g, '_');
+  a.download = `${fileName}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }

@@ -11,7 +11,8 @@ import {
   RotateCcw, 
   Check, 
   Sparkles,
-  BookOpen
+  BookOpen,
+  ScrollText
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -21,6 +22,7 @@ interface HeaderProps {
   onOpenSlideNavigator: () => void;
   onOpenBacklog: () => void;
   onOpenScriptImport: () => void;
+  onOpenTxtExport: () => void;
   onOpenPdfExport: () => void;
   onOpenSettings: () => void;
   onExportJson: () => void;
@@ -36,6 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSlideNavigator,
   onOpenBacklog,
   onOpenScriptImport,
+  onOpenTxtExport,
   onOpenPdfExport,
   onOpenSettings,
   onExportJson,
@@ -138,6 +141,15 @@ export const Header: React.FC<HeaderProps> = ({
           title="대본 텍스트 일괄 작성 및 불러오기"
         >
           <FileText className="w-4 h-4 text-indigo-400" />
+        </button>
+
+        {/* TXT Script Export */}
+        <button
+          onClick={onOpenTxtExport}
+          className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+          title="대본 텍스트(.txt) 파일로 내보내기"
+        >
+          <ScrollText className="w-4 h-4 text-amber-400" />
         </button>
 
         {/* PDF Export */}
