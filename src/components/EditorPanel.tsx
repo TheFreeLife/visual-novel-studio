@@ -391,23 +391,36 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
 
             {/* Scene Background Picker */}
             <div className="space-y-2 pt-2 border-t border-slate-800">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-1.5">
                 <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
                   <ImageIcon className="w-3.5 h-3.5 text-emerald-400" />
                   <span>장면 배경 (배경 전환 기준)</span>
                 </label>
 
-                <label className="flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 cursor-pointer bg-slate-900 hover:bg-slate-850 px-2 py-0.5 rounded border border-slate-700/60">
-                  <Upload className="w-3 h-3" />
-                  <span>배경 이미지 업로드</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleBackgroundUpload}
-                    className="hidden"
-                  />
-                </label>
+                <div className="flex items-center gap-1.5">
+                  <span 
+                    title="PC/모바일 전체 화면에 최적화된 표준 와이드 규격입니다."
+                    className="text-[10px] text-amber-300/90 font-medium bg-amber-500/10 border border-amber-500/25 px-1.5 py-0.5 rounded tracking-tight"
+                  >
+                    권장 16:9 (1920×1080)
+                  </span>
+
+                  <label className="flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 cursor-pointer bg-slate-900 hover:bg-slate-850 px-2 py-0.5 rounded border border-slate-700/60 transition-colors shadow-sm">
+                    <Upload className="w-3 h-3" />
+                    <span>배경 이미지 업로드</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleBackgroundUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
               </div>
+
+              <p className="text-[10px] text-slate-400 leading-tight">
+                💡 <span className="text-slate-300 font-medium">배경 제작 팁:</span> <strong>16:9 (1920×1080)</strong> 비율이 가장 자연스럽습니다. 하단 대사창과 좌우 캐릭터를 고려해 중요 피사체는 중앙 위주로 배치해 주세요.
+              </p>
 
               {/* Custom uploaded background active status */}
               {currentScene.background.type === 'custom' && (
